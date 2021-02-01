@@ -1,39 +1,57 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:stream_chat_flutter/stream_chat_flutter.dart';
 import 'package:streamchat/_demoData/users.dart';
-import 'package:streamchat/model/userModel.dart';
+import 'package:streamchat/helper/fcm.dart';
 import 'package:streamchat/repository/chatRepo.dart';
 import 'package:streamchat/repository/streamChat.dart';
-import 'package:streamchat/repository/userRepo.dart';
+import 'package:streamchat/view/chat/widgets/chatListTileWidget.dart';
+import 'package:streamchat/view/general/loginScreen.dart';
 import 'package:streamchat/view/widgets/screenLoading.dart';
 import 'package:streamchat/viewModel/viewModel.dart';
 
 import 'chattingScreen.dart';
 
-class ChatListScreen extends StatelessWidget {
-  final users = DemoUsers.users.where((element) =>
-  element.id != ViewModel.currentUser.id).toList();
+class ChatListScreen extends StatefulWidget {
+  @override
+  _ChatListScreenState createState() => _ChatListScreenState();
+}
+
+class _ChatListScreenState extends State<ChatListScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    FCMHandler.init();
+  }
+
+  final users = DemoUsers.users.where((element) => element.id != ViewModel.currentUser.id).toList();
+
   @override
   Widget build(BuildContext context) {
-
-    String imageLink = '';
-
     return Obx(()=>IsScreenLoading(
       screenLoading: ViewModel.appLoading.value,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'Chats',
+            ViewModel.currentUser.name,
             style: TextStyle(
                 color: Colors.white
             ),
           ),
           centerTitle: true,
           actions: [
+            CircleAvatar(
+              backgroundImage: CachedNetworkImageProvider(
+                ViewModel.currentUser.image
+              ),
+            ),
             TextButton(
               onPressed: (){
                 SConfig.client.disconnect(clearUser: true);
+                Get.offAll(LoginScreen());
               },
               child: Text(
                 'Logout'
@@ -44,117 +62,65 @@ class ChatListScreen extends StatelessWidget {
         drawer: Drawer(
           child: ListView(
             children: [
-              /*DrawerHeader(
-                child: TextFormField(
-                  initialValue: ViewModel.currentUser.name,
-                  onFieldSubmitted: (value) async{
-                    UserRepo.updateUser(null, value);
-                  },
-                ),
-              ),
-              DrawerHeader(
-                  child: Row(
-                    children: [
-                      FutureBuilder(
-                        future: UserRepo.getImage(),
-                        builder: (_,snapShot){
-                          if(snapShot.connectionState == ConnectionState.done){
-                            imageLink = snapShot.data;
-                            return Image.network(
-                              snapShot.data,
-                              height: 200,
-                              width: 150,
-                            );
-                          }else{
-                            return Text('Working');
-                          }
-                        },
-                      ),
-                      FlatButton(onPressed: () async {
-                        ViewModel.screenLoading(true);
-                        await UserRepo.updateUser(imageLink,null);
-                        ViewModel.screenLoading(false);
-                      }, child: Text('Set image'))
-                    ],
-                  )
-              ),*/
-              ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.symmetric(vertical: 50),
-                itemCount: users.length,
-                itemBuilder: (_, index) {
-                  UserModel user = users[index];
-                  return GestureDetector(
-                    onTap: () async {
-                      /// chat with user
-                      Channel channel = await ChatRepo.createChat(
-                          user.id + ViewModel.currentUser.id, user.id);
-                      Get.to(ChattingScreen(channel: channel));
+              Wrap(
+                children: users.map((user) => ListTile(
+                  onTap: () async {
 
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: CircleAvatar(
-                        child: Text(
-                            user.id
-                        ),
-                      ),
+                    ViewModel.screenLoading(true);
+
+                    /// create a chat with the user
+                    ///
+                    /// if the chat already exist go to that chat
+                    /// else create a new chat
+                    Channel channel = await ChatRepo.createChat(
+                        user.id + ViewModel.currentUser.id,
+                        user.id
+                    );
+
+                    ViewModel.screenLoading(false);
+                    Get.to(ChattingScreen(channel: channel));
+
+                  },
+                  leading: CircleAvatar(
+                    backgroundImage: CachedNetworkImageProvider(
+                        user.image
                     ),
-                  );
-                },
+                  ),
+                  title: Text(
+                    user.name
+                  ),
+                  subtitle: Text(
+                    user.id
+                  ),
+                )).toList(),
               )
             ],
           ),
         ),
-        body: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(
-                flex: 1,
-                child: Text(
-                  'List to Chat',
-                  style: TextStyle(
-                      fontSize: 24
-                  ),
-                )
-            ),
-            Expanded(
-              flex: 9,
-              child: ChannelsBloc(
-                child: ChannelListView(
-                  pagination: PaginationParams(limit: 20),
-                  filter: {
-                    'members': {
-                      '\$in': [ViewModel.currentUser.id]
-                    }
-                  },
-                  /*channelPreviewBuilder: (_, channel) => StreamBuilder<Map<String, dynamic>>(
-                    stream: channel.extraDataStream,
-                    initialData: channel.extraData,
-                    builder: (context, snapshot) {
-                      String title;
-                      if (snapshot.data['name'] == null &&
-                          channel.state.members.length == 2) {
-                        final otherMember = channel.state.members
-                            .firstWhere((member) => member.user.id != ViewModel.currentUser.id);
-                        title = otherMember.user.name;
-                      } else {
-                        title = snapshot.data['name'] ?? channel.id;
-                      }
+        body: Padding(
+          padding: const EdgeInsets.all(20),
+          child: ChannelsBloc(
+            child: ChannelListView(
+              pagination: PaginationParams(limit: 20),
 
-                      return Text(
-                        title.toUpperCase(),
-                        overflow: TextOverflow.ellipsis,
-                      );
-                    },
-                  ),*/
-                  sort: [SortOption('last_message_at')],
-                  onChannelTap: (channel, _) => Get.to(ChattingScreen(channel: channel)),
+              /// making sure the chats only the user is in is shown
+              filter: {
+                'members': {
+                  '\$in': [ViewModel.currentUser.id]
+                }
+              },
+              /// when there is no chat builds this
+              emptyBuilder: (_)=> Center(
+                child: Text(
+                  'You have no chats, start a chat with a friend <3'
                 ),
               ),
+              /// custom channel preview
+              channelPreviewBuilder: (_, channel) => ChatTileWidget(channel: channel),
+              sort: [SortOption('last_message_at')],
             ),
-          ],
-        ),
+          ),
+        )
       ),
     ));
   }

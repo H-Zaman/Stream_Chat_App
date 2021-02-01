@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "535433695338",
+    "project_id": "streamchat-9941b",
+    "storage_bucket": "streamchat-9941b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535433695338:android:ffe529afab70fe38bd7a13",
+        "android_client_info": {
+          "package_name": "com.shuvro.streamchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "535433695338-0nu7duncmmf3puj9ojh5623jbf9m6r04.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjgGstzDrZHtT-yMZX7oWpd4uiFM60pOk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "535433695338-0nu7duncmmf3puj9ojh5623jbf9m6r04.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

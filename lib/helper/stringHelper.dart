@@ -9,4 +9,18 @@ class StringHelper{
     return String.fromCharCodes(Iterable.generate(
         10, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
   }
+
+  static String getInitials(String string) {
+    List<String> names = string.split(" ");
+    String initials = "";
+    int numWords = 2;
+
+    if(numWords < names.length) {
+      numWords = names.length;
+    }
+    for(var i = 0; i < numWords; i++){
+      initials += '${names[i][0]}';
+    }
+    return initials;
+  }
 }

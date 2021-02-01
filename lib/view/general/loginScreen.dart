@@ -51,20 +51,25 @@ class LoginScreen extends StatelessWidget {
                       return GestureDetector(
                         onTap: () async{
                           /// SIMULATING LOGIN
-                          /// LOGGIN IN
 
                           ViewModel.screenLoading(true);
                           ViewModel.currentUser = user;
 
+                          ///THIS SETS THE USER IN STREAM CHAT
+                          ///
+                          /// IF THE USER EXIST IT LOGS IT SELF IN
+                          /// IF THE USER DOES NOT EXIST IT CREATES THE USER AND THEN LOG IN
                           await SConfig.client.setUser(
                               User(
                                   id: user.id,
                                   extraData: {
-                                    'name' : user.name
+                                    'name' : user.name,
+                                    'image': user.image
                                   }
                               ),
                               SConfig.client.devToken(user.id)
                           );
+
                           ViewModel.screenLoading(false);
 
                           Get.offAll(ChatListScreen());

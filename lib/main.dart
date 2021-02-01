@@ -23,10 +23,12 @@ class MyApp extends StatelessWidget {
           ),
         )
       ),
-      builder: (context, child) => StreamChat(
-        client: SConfig.client,
-        child: child,
-      ),
+      builder: (context, child) {
+        return StreamChat(
+          client: SConfig.client,
+          child: child,
+        );
+      },
       home:HomePageScreen(),
     );
   }
